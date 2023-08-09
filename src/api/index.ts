@@ -6,6 +6,9 @@ import {ThemeEngine} from '../generators/theme-engines';
 import {createOrUpdateDynamicTheme, removeDynamicTheme} from '../inject/dynamic-theme';
 import {collectCSS} from '../inject/dynamic-theme/css-collection';
 import {isMatchMediaChangeEventListenerSupported} from '../utils/platform';
+import _ConfigManager from '../background/config-manager';
+
+export const ConfigManager = _ConfigManager;
 
 let isDarkReaderEnabled = false;
 const isIFrame = (() => {

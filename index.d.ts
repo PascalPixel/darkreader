@@ -40,6 +40,35 @@ declare namespace DarkReader {
     function exportGeneratedCSS(): Promise<string>;
 
     /**
+     * ConfigManager loads fixes and theme options from storage.
+     */
+    class ConfigManager {
+        private static DARK_SITES_INDEX: SiteListIndex | null;
+        public static DYNAMIC_THEME_FIXES_INDEX: SitePropsIndex<DynamicThemeFix> | null;
+        public static DYNAMIC_THEME_FIXES_RAW: string | null;
+        public static INVERSION_FIXES_INDEX: SitePropsIndex<InversionFix> | null;
+        public static INVERSION_FIXES_RAW: string | null;
+        public static STATIC_THEMES_INDEX: SitePropsIndex<StaticTheme> | null;
+        public static STATIC_THEMES_RAW: string | null;
+        public static COLOR_SCHEMES_RAW: ParsedColorSchemeConfig | null;
+        public static raw: {
+            darkSites: string | null;
+            dynamicThemeFixes: string | null;
+            inversionFixes: string | null;
+            staticThemes: string | null;
+            colorSchemes: string | null;
+        };
+        public static overrides: {
+            darkSites: string | null;
+            dynamicThemeFixes: string | null;
+            inversionFixes: string | null;
+            staticThemes: string | null;
+        };
+        public static load(config?: LocalConfig): Promise<void>;
+        public static isURLInDarkList(url: string): boolean;
+    }
+
+    /**
      * Theme options.
      */
     interface Theme {
@@ -124,6 +153,10 @@ declare namespace DarkReader {
      */
     interface DynamicThemeFix {
         /**
+         * URLs of the sites where the theme should be applied.
+         */
+        url: string[];
+        /**
          * List of CSS selectors that should be inverted.
          * Usually icons that are contained in sprites.
          */
@@ -150,13 +183,95 @@ declare namespace DarkReader {
          * Mostly used for wrongly inverted background-images
          */
         ignoreImageAnalysis: string[];
-
         /**
          * A toggle to disable the proxying of `document.styleSheets`.
          * This is a API-Exclusive option, as it can break legitmate websites,
          * who are using the Dark Reader API.
          */
         disableStyleSheetsProxy: boolean;
+        /**
+         * A toggle to disable the proxying of `window.CSS`.
+         */
+        disableCustomElementRegistryProxy: boolean;
+    }
+
+    interface SitePropsMut {
+        url: Readonly<string[]>;
+    }
+
+    type SiteProps = Readonly<SitePropsMut>;
+
+    interface SitePropsIndex<SiteFix extends SiteProps> {
+        offsets: Readonly<string>;
+        domains: Readonly<{ [domain: string]: Readonly<number[]> }>;
+        domainLabels: Readonly<{ [domainLabel: string]: Readonly<number[]> }>;
+        nonstandard: Readonly<number[]>;
+        cacheSiteFix: { [offsetId: number]: Readonly<SiteFix> };
+        cacheDomainIndex: { [domain: string]: Readonly<number[]> };
+        cacheCleanupTimer: ReturnType<typeof setTimeout> | null;
+    }
+
+    interface SiteListIndex {
+        urls: Readonly<string[]>;
+        domains: Readonly<{ [domain: string]: number[] }>;
+        domainLabels: Readonly<{ [domainLabel: string]: Readonly<number[]> }>;
+        nonstandard: Readonly<number[]>;
+    }
+
+    interface InversionFix {
+        url: string[];
+        invert: string[];
+        noinvert: string[];
+        removebg: string[];
+        css: string;
+    }
+
+    interface StaticTheme {
+        url: string[];
+        neutralBg?: string[];
+        neutralBgActive?: string[];
+        neutralText?: string[];
+        neutralTextActive?: string[];
+        neutralBorder?: string[];
+        redBg?: string[];
+        redBgActive?: string[];
+        redText?: string[];
+        redTextActive?: string[];
+        redBorder?: string[];
+        greenBg?: string[];
+        greenBgActive?: string[];
+        greenText?: string[];
+        greenTextActive?: string[];
+        greenBorder?: string[];
+        blueBg?: string[];
+        blueBgActive?: string[];
+        blueText?: string[];
+        blueTextActive?: string[];
+        blueBorder?: string[];
+        fadeBg?: string[];
+        fadeText?: string[];
+        transparentBg?: string[];
+        noImage?: string[];
+        invert?: string[];
+        noCommon?: boolean;
+    }
+
+    interface ColorSchemeVariant {
+        // The background color of the color scheme in hex format.
+        backgroundColor: string;
+        // The text color of the color scheme in hex format.
+        textColor: string;
+    }
+
+    interface ParsedColorSchemeConfig {
+        // All defined light color schemes.
+        light: { [name: string]: ColorSchemeVariant };
+        // All defined dark color schemes.
+        dark: { [name: string]: ColorSchemeVariant };
+    }
+
+    interface LocalConfig {
+        local: boolean;
     }
 }
 
