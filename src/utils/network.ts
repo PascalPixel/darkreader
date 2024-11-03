@@ -1,11 +1,12 @@
 import {isFirefox} from './platform';
 
 async function getOKResponse(url: string, mimeType?: string, origin?: string): Promise<Response> {
+    const credentials = origin && url.startsWith(`${origin}/`) ? undefined : 'omit';
     const response = await fetch(
         url,
         {
             cache: 'force-cache',
-            credentials: 'omit',
+            credentials,
             referrer: origin,
         },
     );
@@ -29,6 +30,11 @@ async function getOKResponse(url: string, mimeType?: string, origin?: string): P
 export async function loadAsDataURL(url: string, mimeType?: string): Promise<string> {
     const response = await getOKResponse(url, mimeType);
     return await readResponseAsDataURL(response);
+}
+
+export async function loadAsBlob(url: string, mimeType?: string): Promise<Blob> {
+    const response = await getOKResponse(url, mimeType);
+    return await response.blob();
 }
 
 export async function readResponseAsDataURL(response: Response): Promise<string> {
